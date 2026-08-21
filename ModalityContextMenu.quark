@@ -1,11 +1,14 @@
 (
   name: "ModalityContextMenu",
   summary: "Right-click context menu for MKtlGUI element views",
+  author: "Francesco Corvi",
   version: "0.1.0",
   schelp: "MKtlElementMenu",
-  license: "GPL",
+  license: "GPL-2.0",
+  url: "https://github.com/fracnesco/ModalityContextMenu",
   since: "2026"
-  // requires the Modality Toolkit quark and SuperCollider 3.13+ (for Menu).
-  // Not declared as a dependency: Modality's quark is named "Modality Toolkit",
-  // so a "Modality" dependency would send Quarks off to the directory listing.
+  // Requires the Modality Toolkit quark and SuperCollider 3.13+ (for Menu).
+  // Modality is deliberately not declared as a dependency: its quark is named
+  // "Modality Toolkit", so a "Modality" entry would send Quarks.install off to
+  // the online quarks directory looking for something that isn't there.
 )
