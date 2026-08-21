@@ -1,0 +1,141 @@
+TITLE:: MKtlElementMenu
+summary:: right-click context menu for MKtlGUI element views
+categories:: Libraries>Modality, External Control
+related:: Classes/MKtlGUI, Classes/MKtl, Classes/MAbstractElement
+
+DESCRIPTION::
+
+MKtlElementMenu adds a right-click context menu to every element view in an
+link::Classes/MKtlGUI::. It is wired up automatically, so there is nothing to call:
+
+code::
+MKtl('grid', "intech-grid-nesso").gui;   // right-click any knob, fader, button or pad
+::
+
+The menu tells you how to address the clicked element in code, copies
+ready-to-paste action templates to the clipboard, shows every action currently
+registered on it, and posts its full description.
+
+Right-click is swallowed, so it never also moves the widget or fires its action.
+On macOS Qt delivers ctrl+click as a right-click, so trackpads work too.
+
+subsection:: Menu entries
+
+definitionlist::
+## header || the element's code::elAt:: path, e.g. code::MKtl('grid').elAt(\knobModule, 3, 0)::
+## Copy > action_ template || a bare skeleton, ready to fill in
+## Copy > addAction template || the same, but appending rather than replacing
+## Copy > element path || just the path
+## Copy > group action || one entry per ancestor group, in the code::{ |el, grp| }:: form
+## Copy > .kr snippet || for use in a SynthDef, via link::Classes/MAbstractElement#-kr::
+## Show actions in new document || every action that fires for the element, as re-evaluable code
+## Post element info || name, type, ioType, spec, value, tags, and the protocol detail from code::elemDesc::
+::
+
+Where a code::groupType:: group makes several elements share one underlying view,
+the menu shows one submenu per element rather than letting all but one become
+unreachable.
+
+subsection:: Element methods
+
+The code-string helpers are added to link::Classes/MAbstractElement::, so they
+work on any element or group from the post window, with no GUI involved:
+
+code::
+k = MKtl('grid', "intech-grid-nesso");
+
+k.elAt(\knobModule, 3, 0).elemPath;          // -> [ knobModule, 3, 0 ]
+k.elAt(\knobModule, 3, 0).elemPathString;    // -> "MKtl('grid').elAt(\knobModule, 3, 0)"
+k.elAt(\knobModule, 3, 0).elemPathArgString; // -> "\knobModule, 3, 0"
+k.elAt(\knobModule, 3, 0).actionTemplateString;
+k.elAt(\knobModule, 3, 0).actionTemplateString(\addAction);
+k.elAt(\knobModule, 3, 0).krCodeString;
+k.elAt(\knobModule, 3, 0).actionsAsString;
+k.elAt(\knobModule, 3, 0).postElemInfo;
+
+// and on String:
+"anything".copyToClipboard;
+::
+
+code::elemPath:: walks the code::parent:: chain and picks, at each level, the
+group key when it is a real name and the integer index when
+link::Classes/MKtlDesc:: only filled in a positional code::(i+1).asSymbol::.
+That is what produces code::elAt(\knobModule, 3, 0):: rather than
+code::elAt(\knobModule, '4', '1')::. It round-trips:
+
+code::
+k.elementGroup.flat.every { |el| k.elAt(*el.elemPath) === el };   // -> true
+::
+
+note::
+link::Classes/MAbstractElement#-keys:: looks like it does the same thing, but it
+does not - it recurses into code::MKtlElementGroup:keys::, which returns a
+group's strong::child:: keys rather than its ancestor path. This quark does not
+touch it.
+::
+
+subsection:: Methods overwritten in Modality
+
+Nothing in Modality-toolkit is modified, but two of its methods are overwritten
+from this quark. code::MethodOverride.printAll:: should list exactly these two:
+
+definitionlist::
+## code::MKtlGUI:*new:: || one line reproduced verbatim from upstream, plus the call to code::addContextMenus::. Hooking code::*new:: rather than code::MKtl:gui:: covers both entry points, and avoids extension-overwrites-extension, which resolves by compile order.
+## code::MKtlElementView:snapback_:: || reimplemented as flag-only. Upstream it installs and removes code::view.mouseDownAction:: directly, which would blow away the menu wrapper whenever code::t:: or code::m:: is pressed over a widget. The click behaviour moves into code::MKtlGUI:addContextMenus:: instead, where it also skips button 1.
+::
+
+CLASSMETHODS::
+
+METHOD:: qtViewOf
+Follow code::.view:: until the real link::Classes/View:: underneath is reached.
+Handles all the shapes code::MKtlElementView:view:: can take: plain Views,
+link::Classes/MPadView::-style code::SCViewHolder::s, and the
+code::MPadUpViewRedirect:: spoof objects.
+argument:: obj
+returns:: a View, or nil
+
+METHOD:: attachTo
+Install the menu on a view, wrapping rather than replacing its existing mouse
+handlers so that code::MPadView::'s own actions keep working.
+argument:: qtView
+argument:: elementViews
+the MKtlElementViews sharing this view
+
+METHOD:: showMenuFor
+Build a fresh menu and pop it up at the cursor.
+argument:: elementViews
+
+METHOD:: menuFor
+argument:: elements
+returns:: a link::Classes/Menu::
+
+METHOD:: actionsFor, copyMenuFor
+build the link::Classes/MenuAction::s for one element
+argument:: element
+
+METHOD:: ancestorGroupsOf
+every ancestor group that has a usable code::elAt:: path
+argument:: element
+
+METHOD:: currentMenu
+The menu currently on screen. code::QMenu::popup:: is non-modal, so it is held
+here to keep it from being collected while it is showing.
+
+private:: prCopy
+
+INSTANCEMETHODS::
+
+EXAMPLES::
+
+code::
+k = MKtl('grid', "intech-grid-nesso");
+g = k.gui;
+
+// right-click the fourth knob in the last row, choose Copy > action_ template,
+// paste, and fill in:
+MKtl('grid').elAt(\knobModule, 3, 0).action_({ |el|
+	el.value.postln;
+});
+
+// right-click it again and choose "Show actions in new document"
+::
