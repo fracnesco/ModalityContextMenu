@@ -1,23 +1,25 @@
 TITLE:: MKtlElementMenu
-summary:: right-click context menu for MKtlGUI element views
+summary:: context menu for MKtlGUI element views
 categories:: Libraries>Modality, External Control
 related:: Classes/MKtlGUI, Classes/MKtl, Classes/MAbstractElement
 
 DESCRIPTION::
 
-MKtlElementMenu adds a right-click context menu to every element view in an
-link::Classes/MKtlGUI::. It is wired up automatically, so there is nothing to call:
+MKtlElementMenu adds a context menu to every element view in an
+link::Classes/MKtlGUI::, opened by right-click or alt(option)-click. It is
+wired up automatically, so there is nothing to call:
 
 code::
-MKtl('grid', "intech-grid-nesso").gui;   // right-click any knob, fader, button or pad
+MKtl('grid', "intech-grid-nesso").gui;   // right-click (or option-click) any knob, fader, button or pad
 ::
 
 The menu tells you how to address the clicked element in code, copies
 ready-to-paste action templates to the clipboard, shows every action currently
 registered on it, and posts its full description.
 
-Right-click is swallowed, so it never also moves the widget or fires its action.
-On macOS Qt delivers ctrl+click as a right-click, so trackpads work too.
+A menu click - right-click or option-click - is swallowed before the widget's
+built-in Qt handling runs, so it never also moves the widget or fires its
+action. On macOS Qt delivers ctrl+click as a right-click, so trackpads work too.
 
 subsection:: Menu entries
 
@@ -96,7 +98,9 @@ returns:: a View, or nil
 
 METHOD:: attachTo
 Install the menu on a view, wrapping rather than replacing its existing mouse
-handlers so that code::MPadView::'s own actions keep working.
+handlers so that code::MPadView::'s own actions keep working. A right- or
+alt-click returns code::true:: from the handler, which consumes the event
+before the widget's built-in Qt handling runs.
 argument:: qtView
 argument:: elementViews
 the MKtlElementViews sharing this view

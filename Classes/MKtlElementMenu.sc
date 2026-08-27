@@ -1,8 +1,9 @@
 /*
-The right-click context menu shown on MKtlGUI element views.
+The context menu shown on MKtlGUI element views, opened by right-click or
+alt(option)-click.
 
 All class-side: MKtlGUI:addContextMenus wires it up, and this class builds a
-fresh Menu on each right-click so that what it shows is always current.
+fresh Menu on each menu click so that what it shows is always current.
 
 Part of the ModalityContextMenu extension.
 */
@@ -28,22 +29,36 @@ MKtlElementMenu {
 	}
 
 	// Wrap rather than replace the existing handlers, so MPadView's own
-	// mouse actions and MHexPad:upDoesAction_ keep working. Guarding mouseUp
-	// too is what stops a right-click on a pad firing valueAction = 0 on release.
+	// mouse actions and MHexPad:upDoesAction_ keep working.
+	//
+	// The menu opens on right-click or alt(option)-click. Returning true
+	// from the action consumes the event in C++ before the widget's own Qt
+	// handling runs (the same mechanism QView:mouseDownEvent uses to block
+	// a view while ctrl-dragging) - without it, Button, Knob and Slider
+	// still change value on a menu click even though the wrapped sclang
+	// actions are skipped. The matching mouseUp is consumed via the
+	// menuClick flag rather than by re-testing btn/mod, so a pad release
+	// still fires valueAction = 0 even if alt changed state mid-gesture.
 	*attachTo { |qtView, elementViews|
 		var prevDown = qtView.mouseDownAction;
 		var prevUp = qtView.mouseUpAction;
+		var menuClick = false;
 
 		qtView.mouseDownAction = { |vw, x, y, mod, btn, clicks|
-			if (btn == 1) {
+			menuClick = (btn == 1) or: { mod.isAlt };
+			if (menuClick) {
 				MKtlElementMenu.showMenuFor(elementViews);
+				true
 			} {
 				prevDown.value(vw, x, y, mod, btn, clicks);
 			};
 		};
 
 		qtView.mouseUpAction = { |vw, x, y, mod, btn|
-			if (btn != 1) {
+			if (menuClick) {
+				menuClick = false;
+				true
+			} {
 				prevUp.value(vw, x, y, mod, btn);
 			};
 		};

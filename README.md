@@ -1,13 +1,14 @@
 # ModalityContextMenu
 
-A right-click context menu for the element views of a
-[Modality](https://github.com/ModalityTeam/Modality-toolkit) `MKtlGUI`.
+A context menu for the element views of a
+[Modality](https://github.com/ModalityTeam/Modality-toolkit) `MKtlGUI`,
+opened by right-click or option-click (alt-click).
 
 ```supercollider
-MKtl('grid', "intech-grid-nesso").gui;   // now right-click any knob, fader, button or pad
+MKtl('grid', "intech-grid-nesso").gui;   // now right-click (or option-click) any knob, fader, button or pad
 ```
 
-Right-clicking a widget tells you how to address that element in code, copies
+The menu tells you how to address that element in code, copies
 ready-to-paste action templates to the clipboard, shows every action currently
 registered on it, and posts its full description.
 
@@ -55,8 +56,9 @@ Quarks.uninstall("ModalityContextMenu");
 | Show actions in new document | every action that fires for this element, as re-evaluable code |
 | Post element info | name, type, ioType, spec, value, tags, and the protocol detail from `elemDesc` |
 
-Right-click is swallowed, so it never also moves the widget or fires its action.
-On macOS Qt delivers ctrl+click as a right-click, so trackpads work too.
+A menu click - right-click or option-click - is swallowed before the widget's
+built-in Qt handling runs, so it never also moves the widget or fires its
+action. On macOS Qt delivers ctrl+click as a right-click, so trackpads work too.
 
 Where a `groupType` group makes several elements share one underlying view — a
 pad's `\on` / `\off` / `\touch`, say — the menu shows one submenu per element
